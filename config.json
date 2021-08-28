@@ -8,8 +8,8 @@
             "name": "demo",
             "start_file": "index.js",
             "internal_port": null,
-            "pid": 0,
-            "status": "stopped"
+            "pid": 16471,
+            "status": "online"
         }
     ]
 }

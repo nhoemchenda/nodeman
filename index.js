@@ -40,6 +40,7 @@ app.get('/', (req, res) => {
 
 
   const apps = getAppList();
+  registerAllProxy(apps);
   res.render('index', {
     apps: apps
   });
@@ -312,13 +313,21 @@ app.post("/new-upload", upload.single("file"), (req, res) => {
     fs.rmdirSync('apps/'+name, { recursive: true });
   }
   fs.createReadStream(tempPath)
-  .pipe(unzipper.Extract({ path: 'apps/' }));
+  .pipe(unzipper.Extract({ path: 'apps/'+name }));
 
   return res.redirect('/');
 }
 );
-
-
+const proxy = require('express-http-proxy');
+function registerAllProxy(apps){
+  apps.forEach(proxyApp => {
+    if(proxyApp.internal_port != null){
+      app.use('/'+proxyApp.name, proxy('127.0.0.1:'+proxyApp.internal_port));
+    }
+    
+  });
+  
+}
 
 app.listen(port, () => {
   console.log(`Nodeman listening at http://localhost:${port}`)
