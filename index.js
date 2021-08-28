@@ -62,7 +62,21 @@ app.post('/start', (req, res) => {
     app: req.body.app
   };
   var app = findAppConfig(body.app);
-  const cmd = 'cd apps/' + body.app + ' && pm2 start ' + app.start_file + ' --name ' + app.name;
+  var launchPath = app.start_file;
+  console.log({launchPath});
+  console.log({end: launchPath.endsWith('.jsc')});
+  var cmd = '';
+  if(launchPath.endsWith('.jsc')){
+
+    launchPath = app.name+'.js';
+    fs.writeFileSync('apps/'+launchPath, 'require("./'+app.name+'/node_modules/bytenode");require("./'+app.name+'/'+app.start_file+'");');
+    cmd = 'cd apps/' + body.app + ' && npm install bytenode && pm2 start ../' + launchPath + ' --name ' + app.name;
+  
+  }else{
+    cmd = 'cd apps/' + body.app + ' && pm2 start ' + launchPath + ' --name ' + app.name;
+  
+  }
+  
   console.log(cmd);
 
   execSync(cmd);
@@ -332,5 +346,7 @@ function registerAllProxy(apps){
 app.listen(port, () => {
   console.log(`Nodeman listening at http://localhost:${port}`)
 });
+
+
 
 

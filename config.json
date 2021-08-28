@@ -5,10 +5,17 @@
     },
     "apps": [
         {
-            "name": "demo",
+            "name": "demo2",
             "start_file": "index.js",
             "internal_port": null,
-            "pid": 16471,
+            "pid": 19763,
+            "status": "online"
+        },
+        {
+            "name": "demo_jsc",
+            "start_file": "index.jsc",
+            "internal_port": null,
+            "pid": 19381,
             "status": "online"
         }
     ]
