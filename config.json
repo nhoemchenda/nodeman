@@ -6,14 +6,7 @@
     "apps": [
         {
             "name": "demo",
-            "start_file": "index.js",
-            "internal_port": null,
-            "pid": 0,
-            "status": "stopped"
-        },
-        {
-            "name": "demo1",
-            "start_file": "index.js",
+            "start_file": null,
             "internal_port": null,
             "pid": 0,
             "status": "stopped"

@@ -165,7 +165,10 @@
                                 <div class="card-header">Apps
                                     <div class="btn-actions-pane-right">
                                         <div role="group" class="btn-group-sm btn-group">
-                                            <button class="btn btn-primary"><i class="pe-7s-plus"></i></button>
+                                            <form id="formUpload" enctype="multipart/form-data" style="display: inline-block;" method="POST" action="/new-upload">
+                                                <button onclick="openUpload(); return false;" data-toggle="tooltip" data-original-title="New Upload" class="btn btn-primary"><i class="pe-7s-upload"></i></button>
+                                                <input onchange="submitFormUpload();" style="display: none;" name="file" type="file" id="uploadfile" accept=".zip" /> 
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -226,6 +229,22 @@
 
                                                     </form>
                                                     {{/if}}
+                                                    <form style="display: inline-block;" action="/restart" method="POST">
+                                                        <input type="hidden" name="app" value="{{this.name}}" />
+                                                        <button type="submit" class="btn btn-warning btn-sm"
+                                                            data-toggle="tooltip" data-placement="top" title=""
+                                                            data-original-title="Force Restart"><i
+                                                                class="pe-7s-refresh-2"></i></button>
+
+                                                    </form>
+                                                    {{#if this.show_setup}}
+                                                    <button onclick="openSetUpModal('{{ this.name }}');" type="button" class="btn btn-info btn-sm"
+                                                        data-placement="top" title="" data-original-title="Setup"
+                                                        data-toggle="modal" data-target="#modalSetup"><i
+                                                            class="pe-7s-settings"></i></button>
+
+
+                                                    {{/if}}
                                                 </td>
                                             </tr>
                                             {{/each}}
@@ -254,8 +273,74 @@
             <script src="http://maps.google.com/maps/api/js?sensor=true"></script>
         </div>
     </div>
-    <script type="text/javascript" src="/architectui/assets/scripts/main.js"></script>
 
+
+
+    <div class="modal fade" id="modalSetup" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form method="POST" action="/save-setup">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Setup</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="col-md-12">
+                            <label for="validationCustomUsername">Path of package.json</label>
+                            <div class="input-group">
+
+                                <input type="text" name="package_json" value="package.json" class="form-control"
+                                    id="validationCustomUsername" placeholder="" aria-describedby="inputGroupPrepend"
+                                    required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="inputGroupPrepend">Browse</span>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="col-md-12">
+                            <label for="validationCustomUsername">Path of Starting File</label>
+                            <div class="input-group">
+
+                                <input type="text" name="start_file" value="index.js" class="form-control"
+                                    id="validationCustomUsername" placeholder="" aria-describedby="inputGroupPrepend"
+                                    required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="inputGroupPrepend">Browse</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="app" id="setupApp" />
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <script type="text/javascript" src="/architectui/assets/scripts/main.js"></script>
+    <script>
+        function openSetUpModal(appName) {
+            document.getElementById('setupApp').value = appName;
+        }
+
+        function openUpload(){
+            document.getElementById('uploadfile').click();
+        }
+
+        function submitFormUpload(){
+            document.getElementById('formUpload').submit();
+        }
+    </script>
 </body>
 
 </html>
