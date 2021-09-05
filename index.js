@@ -8,6 +8,7 @@ const spawnSync = require("child_process").spawnSync;
 const configFile = './config.json';
 const multer = require("multer");
 const unzipper = require('unzipper');
+// const { createProxyMiddleware } = require('http-proxy-middleware');
 
 app.set('view engine', 'hbs');
 app.use(express.static('public'));
@@ -38,9 +39,8 @@ app.post('/login', (req, res) => {
 
 app.get('/', (req, res) => {
 
-
+  updateIncludeNginx();
   const apps = getAppList();
-  registerAllProxy(apps);
   res.render('index', {
     apps: apps
   });
@@ -80,6 +80,9 @@ app.post('/start', (req, res) => {
   console.log(cmd);
 
   execSync(cmd);
+
+ 
+
   return res.redirect('/');
 
 });
@@ -111,6 +114,7 @@ app.post('/stop', (req, res) => {
   const cmd = 'pm2 stop ' + app.name;
   console.log(cmd);
   execSync(cmd);
+  
   return res.redirect('/');
 
 });
@@ -120,7 +124,8 @@ app.post('/save-setup', (req, res) => {
   var body = {
     app: req.body.app,
     package_json: req.body.package_json,
-    start_file: req.body.start_file
+    start_file: req.body.start_file,
+    dot_env: req.body.dot_env
   };
   console.log({ body });
   var config = JSON.parse(fs.readFileSync(configFile));
@@ -132,9 +137,42 @@ app.post('/save-setup', (req, res) => {
   }
   fs.writeFileSync(configFile, JSON.stringify(config, null, '    '));
 
+  replaceEnvDb('apps/'+body.app +'/' + body.dot_env);
+
   return res.redirect('/');
 
 });
+
+function replaceEnvDb(envPath){
+  var content = fs.readFileSync(envPath).toString();
+  var newContent = '';
+  var lines = content.split(/\r?\n/);
+  for(var i =0; i < lines.length ; i++){
+    var line = lines[i];
+    if(! (
+      line.startsWith('DB_HOST') ||
+      line.startsWith('DB_PORT') ||
+      line.startsWith('DB_NAME') ||
+      line.startsWith('DB_USER') ||
+      line.startsWith('DB_PASSWORD')
+    )){
+      newContent += line + `
+`;
+    }
+
+  
+  }
+  newContent += line + `
+DB_HOST=nodeman_postgres
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=postgres
+      `;
+ 
+  
+  fs.writeFileSync(envPath, newContent);
+}
 
 
 function findAppConfig(appName) {
@@ -332,17 +370,38 @@ app.post("/new-upload", upload.single("file"), (req, res) => {
   return res.redirect('/');
 }
 );
-const proxy = require('express-http-proxy');
-function registerAllProxy(apps){
-  apps.forEach(proxyApp => {
+
+
+function updateIncludeNginx(){
+  const apps = getAppList();
+  var content = '';
+  var template = `
+      location /{APP_NAME} {
+            
+        rewrite ^/{APP_NAME}/(.*)$ /$1 break;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+        proxy_pass http://nodeman_app:{APP_PORT};
+      }
+  `;
+  for(var i =0; i< apps.length ; i++){
+    var proxyApp = apps[i];
     if(proxyApp.internal_port != null){
-      app.use('/'+proxyApp.name, proxy('127.0.0.1:'+proxyApp.internal_port));
+      var tmpTemplate = template;
+      tmpTemplate = tmpTemplate.replace('{APP_NAME}',proxyApp.name);
+      tmpTemplate = tmpTemplate.replace('{APP_NAME}',proxyApp.name);
+      tmpTemplate = tmpTemplate.replace('{APP_PORT}',proxyApp.internal_port);
+      content += tmpTemplate;
     }
-    
-  });
-  
+  }
+  fs.writeFileSync('/nodeman_data/nginx_include.conf', content);
 }
 
+updateIncludeNginx();
 app.listen(port, () => {
   console.log(`Nodeman listening at http://localhost:${port}`)
 });

@@ -1,14 +1,34 @@
 version: "3.9"
 services:
-  manager:
+  nodeman_app:
     build:
       context: .
-      dockerfile: Dockerfile
+    container_name: nodeman_app
+    volumes: 
+      - nodeman_data:/nodeman_data
+  nodeman_nginx:
+    restart: always
+    build:
+      context: ./nginx
+      args:
+        ENABLED_MODULES: ndk lua
+    container_name: nodeman_nginx
     ports:
-      - "8001:8000"
+      - "8001:80"
+    volumes: 
+      - nodeman_data:/nodeman_data
+
+  nodeman_postgres:
+    image: "postgres"
+    env_file:
+      - database.env
     volumes:
-      - node-manager-data:/data
-networks:
-  default:
+      - nodeman_data_db:/var/lib/postgresql/data/ 
+    container_name: nodeman_postgres
+    # ports: 
+    #   - '54321:5432'
 volumes:
-  node-manager-data:
+  nodeman_data:
+  nodeman_data_db:
+networks:
+  nodeman_network:
